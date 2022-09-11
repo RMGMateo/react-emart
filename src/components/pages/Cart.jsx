@@ -1,13 +1,16 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faStar } from "@fortawesome/free-solid-svg-icons";
 import { Col, Container, Form, ListGroup, Row } from "react-bootstrap";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { useSelector } from "react-redux";
 import { db } from "../../firebase";
+import { useNavigate } from "react-router-dom";
 
 export default function Cart() {
+  const [total, setTotal] = useState(0);
   const activeUser = useSelector((state) => state.activeUser);
+  const navigate = useNavigate();
   const [cartProducts] = useCollection(
     activeUser?.id &&
       db
@@ -16,6 +19,21 @@ export default function Cart() {
         .collection("cart")
         .orderBy("timestamp")
   );
+
+  useEffect(() => {
+    if (!activeUser.email) {
+      navigate("/");
+    }
+  });
+
+  useEffect(() => {
+    let value = 0;
+    cartProducts?.docs.forEach((doc) => {
+      value = value + doc.data().product.price;
+    });
+    setTotal(value);
+  }, [cartProducts]);
+
   return (
     <div>
       <Container fluid style={{ marginTop: "120px" }}>
@@ -102,7 +120,7 @@ export default function Cart() {
               <hr />
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <p>Total Before Tax:</p>
-                {/* <p>${total}</p> */}
+                <p>${total}</p>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -112,7 +130,7 @@ export default function Cart() {
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <p style={{ fontWeight: "bold" }}>Order Total:</p>
-                {/* <p>$ {Math.round(total)}</p> */}
+                <p>$ {Math.round(total)}</p>
               </div>
             </div>
           </Col>
